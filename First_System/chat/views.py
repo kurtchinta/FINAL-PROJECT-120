@@ -12,8 +12,6 @@ from .middleware import EncryptionMiddleware
 
 from .models import Message
 
-from .models import Message
-
 def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
@@ -56,6 +54,30 @@ def home(request):
         return redirect('login')  # Redirect to login if user is not authenticated
     usernames = User.objects.values_list('username', flat=True)
     return render(request, 'chat/home.html', {'usernames': usernames})
+
+@login_required
+def view_messages(request, username):
+    messages = Message.objects.filter(username=username).order_by('-date_added')
+
+        # Decrypt each message's content
+    decrypted_messages = []
+    for message in messages:
+        decrypted_message = {
+            'username': message.username,
+            'content': EncryptionMiddleware.decrypt(message.content),
+            'date_added': message.date_added
+        }
+        decrypted_messages.append(decrypted_message)
+
+    
+    return render(
+        request,
+        'chat/view_messages.html',
+        {
+            'username': username,
+            'messages': decrypted_messages
+        }
+    )
 
 
 def room(request, room_name):
