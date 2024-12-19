@@ -59,9 +59,12 @@ def home(request):
 def view_messages(request, username):
     messages = Message.objects.filter(username=username).order_by('-date_added')
 
+
+
         # Decrypt each message's content
     decrypted_messages = []
     for message in messages:
+        print(message.date_added)
         decrypted_message = {
             'username': message.username,
             'content': EncryptionMiddleware.decrypt(message.content),
