@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Room</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              mint: {
+                50: "#f2fbf9",
+                100: "#d3f4ed",
+                200: "#a7e9db",
+                300: "#72d6c3",
+                400: "#44bda7",
+                500: "#2ca08c",
+                600: "#238173",
+                700: "#1f665d",
+                800: "#1c514b",
+                900: "#1a433f",
+              },
+            },
+            fontFamily: {
+              poppins: ["Poppins", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .fade-in {
+        animation: fadeIn 0.5s ease-out;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-mint-50 to-mint-100 font-poppins text-gray-800 min-h-screen flex items-center justify-center p-6"
+  >
+    <div
+      class="w-full max-w-2xl bg-white shadow-lg rounded-lg overflow-hidden fade-in"
+    >
+      <!-- Room Header -->
+      <div class="bg-gradient-to-r from-mint-400 to-mint-600 p-6 text-white">
+        <h2 class="text-3xl font-bold">Room: {{ room_name }}</h2>
+        <p class="mt-2">
+          Logged in as <span class="font-semibold">{{ username }}</span>
+        </p>
+      </div>
+
+      <!-- Chat Messages -->
+      <div id="chat-messages" class="h-96 overflow-y-auto p-6 bg-mint-50">
+        {% for m in messages %}
+        <div class="p-3 bg-white rounded-lg shadow mb-3 fade-in">
+          <span class="font-semibold text-mint-600">{{ m.username }}:</span>
+          <span class="text-gray-700">{{ m.content }}</span>
+        </div>
+
+        {% endfor %}
+      </div>
+
+      <!-- Message Input -->
+      <div class="p-6 bg-white border-t border-mint-200">
+        <div class="flex items-center gap-3">
+          <input
+            id="chat-message-input"
+            type="text"
+            placeholder="Type your message..."
+            class="flex-1 px-4 py-3 bg-mint-50 border-2 border-mint-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-mint-400 focus:border-transparent text-mint-800 placeholder-mint-400 transition-all duration-300"
+          />
+          <button
+            id="chat-message-submit"
+            class="bg-mint-500 hover:bg-mint-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 ease-in-out shadow-md hover:shadow-lg flex items-center"
+          >
+            <i data-feather="send" class="w-5 h-5 mr-2"></i>
+            Send
+          </button>
+        </div>
+      </div>
+
+      <!-- Back to Home Button -->
+      <div class="p-6 bg-mint-100 flex justify-between items-center">
+        <small class="text-mint-700">
+          Your username: <span class="font-semibold">{{ username }}</span>
+        </small>
+        <a
+          href="{% url 'home' %}"
+          class="bg-mint-500 hover:bg-mint-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 ease-in-out shadow-md hover:shadow-lg flex items-center"
+        >
+          <i data-feather="home" class="w-5 h-5 mr-2"></i>
+          Back to Home
+        </a>
+      </div>
+    </div>
+
+    <!-- Serialize room_name and username manually -->
+    <script type="application/json" id="json-roomname">
+      "{{ room_name }}"
+    </script>
+    <script type="application/json" id="json-username">
+      "{{ username }}"
+    </script>
+
+    <script>
+      // Initialize Feather icons
+      feather.replace();
+
+      // Parse the JSON content into JavaScript variables
+      const roomName = JSON.parse(
+        document.getElementById("json-roomname").textContent
+      );
+      const userName = JSON.parse(
+        document.getElementById("json-username").textContent
+      );
+
+      const chatSocket = new WebSocket(
+        "ws://" + window.location.host + "/ws/" + roomName + "/"
+      );
+
+      chatSocket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+
+        if (data.message) {
+          // Create a new message div and append it to the chat messages container
+          const messageDiv = document.createElement("div");
+          messageDiv.className = "p-3 bg-white rounded-lg shadow mb-3 fade-in";
+
+          // Add the username and message to the container
+          const usernameSpan = document.createElement("span");
+          usernameSpan.textContent = data.username + ": ";
+          usernameSpan.className = "font-semibold text-mint-600";
+
+          const messageSpan = document.createElement("span");
+          messageSpan.textContent = data.message;
+          messageSpan.className = "text-gray-700";
+
+          // Append username and message to the container div
+          messageDiv.appendChild(usernameSpan);
+          messageDiv.appendChild(messageSpan);
+
+          // Append the container to the chat messages
+          document.querySelector("#chat-messages").appendChild(messageDiv);
+
+          // Scroll to the bottom of the chat container for the latest message
+          const chatMessages = document.querySelector("#chat-messages");
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        } else {
+          alert("The message is empty!");
+        }
+      };
+
+      chatSocket.onclose = function (e) {
+        console.log("The socket closed unexpectedly.");
+      };
+
+      document.querySelector("#chat-message-submit").onclick = function (e) {
+        const messageInputDom = document.querySelector("#chat-message-input");
+        const message = messageInputDom.value;
+
+        chatSocket.send(
+          JSON.stringify({
+            message: message,
+            username: userName,
+            room: roomName,
+          })
+        );
+
+        messageInputDom.value = "";
+      };
+
+      // Add keypress event listener for the message input
+      document
+        .querySelector("#chat-message-input")
+        .addEventListener("keypress", function (event) {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            document.querySelector("#chat-message-submit").click();
+          }
+        });
+    </script>
+  </body>
+</html>
