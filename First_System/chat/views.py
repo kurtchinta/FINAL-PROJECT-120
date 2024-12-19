@@ -9,6 +9,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseForbidden
 
+from .models import Message
+
 def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
@@ -56,7 +58,9 @@ def home(request):
 def room(request, room_name):
     username = request.GET.get('username', 'Anonymous')
 
-    return render(request, 'chat/room.html', {'room_name': room_name, 'username': username})
+    messages = Message.objects.filter(room=room_name)[0:25]
+
+    return render(request, 'chat/room.html', {'room_name': room_name, 'username': username, 'messages': messages})
 
 @login_required
 def delete_user(request, username):

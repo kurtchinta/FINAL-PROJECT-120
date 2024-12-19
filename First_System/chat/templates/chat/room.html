@@ -13,7 +13,12 @@
         id="chat-messages"
         class="h-64 overflow-y-auto border border-gray-300 rounded-lg p-4 bg-gray-50"
       >
-        <!-- Messages will be dynamically inserted here -->
+        {% for m in messages %}
+        <div class="p-2 bg-gray-200 rounded-lg mb-2">
+          <span class="font-semibold text-blue-500">{{ m.username }}:</span>
+          <span>{{ m.content }}</span>
+        </div>
+        {% endfor %}
       </div>
 
       <!-- Message Input -->
