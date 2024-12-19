@@ -8,6 +8,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseForbidden
+from .middleware import EncryptionMiddleware
+
+from .models import Message
 
 from .models import Message
 
@@ -58,9 +61,23 @@ def home(request):
 def room(request, room_name):
     username = request.GET.get('username', 'Anonymous')
 
+    # Fetch the most recent 25 messages for the room
     messages = Message.objects.filter(room=room_name)[0:25]
 
-    return render(request, 'chat/room.html', {'room_name': room_name, 'username': username, 'messages': messages})
+    # Decrypt each message's content
+    decrypted_messages = []
+    for message in messages:
+        decrypted_message = {
+            'username': message.username,
+            'content': EncryptionMiddleware.decrypt(message.content),
+        }
+        decrypted_messages.append(decrypted_message)
+
+    return render(request, 'chat/room.html', {
+        'room_name': room_name,
+        'username': username,
+        'messages': decrypted_messages,
+    })
 
 @login_required
 def delete_user(request, username):
