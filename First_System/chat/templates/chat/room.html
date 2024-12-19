@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Room</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md bg-white shadow-lg rounded-lg p-6">
+      <!-- Chat Messages -->
+      <div
+        id="chat-messages"
+        class="h-64 overflow-y-auto border border-gray-300 rounded-lg p-4 bg-gray-50"
+      >
+        <!-- Messages will be dynamically inserted here -->
+      </div>
+
+      <!-- Message Input -->
+      <div class="mt-4 flex items-center gap-2">
+        <input
+          id="chat-message-input"
+          type="text"
+          placeholder="Type your message..."
+          class="flex-1 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          id="chat-message-submit"
+          class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+        >
+          Send
+        </button>
+      </div>
+
+      <!-- Username -->
+      <small class="text-gray-500 mt-2 block">
+        Your username: <span class="font-semibold">{{ username }}</span>
+      </small>
+    </div>
+
+    <!-- Serialize room_name and username manually -->
+    <script type="application/json" id="json-roomname">
+      "{{ room_name }}"
+    </script>
+    <script type="application/json" id="json-username">
+      "{{ username }}"
+    </script>
+
+    <script>
+      // Parse the JSON content into JavaScript variables
+      const roomName = JSON.parse(
+        document.getElementById("json-roomname").textContent
+      );
+      const userName = JSON.parse(
+        document.getElementById("json-username").textContent
+      );
+
+      const chatSocket = new WebSocket(
+        "ws://" + window.location.host + "/ws/" + roomName + "/"
+      );
+
+      chatSocket.onmessage = function (e) {
+        console.log("onmessage");
+
+        const data = JSON.parse(e.data);
+
+        if (data.message) {
+          // Create a new message div and append it to the chat messages container
+
+          const messageDiv = document.createElement("div");
+          messageDiv.className = "p-2 bg-gray-200 rounded-lg mb-2";
+
+          // Add the username and message to the container
+          const usernameSpan = document.createElement("span");
+          usernameSpan.textContent = data.username + ": ";
+          usernameSpan.className = "font-semibold text-blue-500";
+
+          const messageSpan = document.createElement("span");
+          messageSpan.textContent = data.message;
+
+          // Append username and message to the container div
+          messageDiv.appendChild(usernameSpan);
+          messageDiv.appendChild(messageSpan);
+
+          // Append the container to the chat messages
+          document.querySelector("#chat-messages").appendChild(messageDiv);
+
+          // Scroll to the bottom of the chat container for the latest message
+          const chatMessages = document.querySelector("#chat-messages");
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        } else {
+          alert("The message is empty!");
+        }
+      };
+
+      chatSocket.onclose = function (e) {
+        console.log("The socket closed unexpectedly.");
+      };
+
+      document.querySelector("#chat-message-submit").onclick = function (e) {
+        const messageInputDom = document.querySelector("#chat-message-input");
+        const message = messageInputDom.value;
+
+        chatSocket.send(
+          JSON.stringify({
+            message: message,
+            username: userName,
+            room: roomName,
+          })
+        );
+
+        messageInputDom.value = "";
+      };
+    </script>
+  </body>
+</html>
