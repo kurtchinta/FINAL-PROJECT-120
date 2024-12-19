@@ -41,6 +41,16 @@
       <small class="text-gray-500 mt-2 block">
         Your username: <span class="font-semibold">{{ username }}</span>
       </small>
+
+      <!-- Back to Home Button -->
+      <div class="mt-4">
+        <a
+          href="{% url 'home' %}"
+          class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+        >
+          Back to Home
+        </a>
+      </div>
     </div>
 
     <!-- Serialize room_name and username manually -->
@@ -65,13 +75,10 @@
       );
 
       chatSocket.onmessage = function (e) {
-        console.log("onmessage");
-
         const data = JSON.parse(e.data);
 
         if (data.message) {
           // Create a new message div and append it to the chat messages container
-
           const messageDiv = document.createElement("div");
           messageDiv.className = "p-2 bg-gray-200 rounded-lg mb-2";
 

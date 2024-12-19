@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Messages for {{ username }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 font-sans antialiased">
+    <div class="container mx-auto p-6">
+      <h2 class="text-4xl font-semibold text-gray-800 mb-6">
+        Messages for {{ username }}
+      </h2>
+
+      <!-- Messages -->
+      <div class="bg-white p-6 rounded-lg shadow-lg">
+        {% for message in messages %}
+        <div class="mb-4">
+          <p class="text-lg text-gray-800 font-semibold">
+            {{ message.date_added }}
+          </p>
+          <p class="text-gray-600">{{ message.content }}</p>
+        </div>
+        {% empty %}
+        <p>No messages available for {{ username }}.</p>
+        {% endfor %}
+      </div>
+
+      <a
+        href="{% url 'home' %}"
+        class="text-blue-500 hover:text-blue-700 mt-4 inline-block"
+      >
+        Back to Home
+      </a>
+    </div>
+  </body>
+</html>
