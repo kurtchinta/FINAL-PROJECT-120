@@ -109,7 +109,8 @@ This project demonstrates the development of two secure Django REST Framework ap
 - **John Dave Lausa**
 
 ## Section
-**Course:** IT 120 – Integrative Programming Technologies II  
+**Course:** IT 120 – Integrative Programming Technologies II
+**Section:** AE1
 **Term:** Final – 2024–2025, 1st Semester  
 **Instructor:** Dexter A. Romaguera
 
